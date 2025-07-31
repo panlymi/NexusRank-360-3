@@ -1,6 +1,7 @@
 import streamlit as st
 import pandas as pd
 import numpy as np
+import matplotlib.pyplot as plt
 
 # Function to normalize the decision matrix using vector normalization
 def normalize_matrix(matrix):
@@ -8,15 +9,32 @@ def normalize_matrix(matrix):
 
 # Function to apply the MOORA method
 def moora_method(matrix, weights, impacts):
+    # Step 1: Normalize the matrix
     normalized_matrix = normalize_matrix(matrix)
-    weighted_matrix = normalized_matrix * weights
-    aggregated_scores = weighted_matrix.sum(axis=1)
     
-    # Apply the impact direction (cost or benefit)
+    # Display normalized matrix
+    st.write("Normalized Decision Matrix:")
+    st.write(normalized_matrix)
+    
+    # Step 2: Apply weights to the normalized matrix
+    weighted_matrix = normalized_matrix * weights
+    st.write("Weighted Matrix:")
+    st.write(weighted_matrix)
+    
+    # Step 3: Aggregate the scores
+    aggregated_scores = weighted_matrix.sum(axis=1)
+    st.write("Aggregated Scores (Before Impact Adjustment):")
+    st.write(aggregated_scores)
+    
+    # Step 4: Apply impact adjustment (cost or benefit)
     for i in range(len(impacts)):
         if impacts[i] == "cost":
             aggregated_scores = -aggregated_scores
-            
+
+    # Display final aggregated scores
+    st.write("Final Aggregated Scores (After Impact Adjustment):")
+    st.write(aggregated_scores)
+    
     return aggregated_scores
 
 # Streamlit UI elements
@@ -46,9 +64,18 @@ if uploaded_file is not None:
     if st.button('Rank Alternatives'):
         # Apply MOORA method and display rankings
         rankings = moora_method(df.iloc[:, 1:].values, weights, impacts)
-        df['Ranking'] = rankings.argsort().argsort() + 1  # Rank the alternatives
         
+        # Rank the alternatives
+        df['Ranking'] = rankings.argsort().argsort() + 1
+        
+        # Display Rankings
         st.write("Ranking of Alternatives:")
         st.write(df[['Alternative', 'Ranking']])
-
-# Additional features or calculations can be added here
+        
+        # Step 5: Plot ranking graph (Bar chart)
+        fig, ax = plt.subplots()
+        ax.bar(df['Alternative'], df['Ranking'], color='skyblue')
+        ax.set_xlabel('Alternatives')
+        ax.set_ylabel('Rank')
+        ax.set_title('Ranking of Alternatives Based on MOORA Method')
+        st.pyplot(fig)
